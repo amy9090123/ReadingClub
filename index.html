@@ -375,7 +375,7 @@
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
 
-        // 從雲端 Google Sheets 讀取最新資料
+// 從雲端 Google Sheets 讀取最新資料 (防暫存升級版)
         async function fetchCloudData() {
             if (!API_URL || API_URL.includes("請在此處貼上")) {
                 showLoading(false);
@@ -384,7 +384,9 @@
             }
             try {
                 showLoading(true);
-                const response = await fetch(API_URL);
+                // 加上時間戳記 t，強制瀏覽器不要使用舊快取
+                const targetUrl = `${API_URL}?t=${new Date().getTime()}`;
+                const response = await fetch(targetUrl);
                 const cloudData = await response.json();
                 
                 state.holidays = [];
@@ -398,22 +400,21 @@
                 });
             } catch (error) {
                 console.error("讀取雲端失敗:", error);
-                alert("無法連線至雲端資料庫，將顯示本地快照。");
             } finally {
                 showLoading(false);
                 renderSchedule();
             }
         }
 
-        // 將變更寫入雲端 Google Sheets
+        // 將變更寫入雲端 Google Sheets (防暫存升級版)
         async function saveToCloud(action, type, date, value = '') {
             if (!API_URL || API_URL.includes("請在此處貼上")) return;
             try {
-                const targetUrl = `${API_URL}?action=${action}&type=${type}&date=${date}&value=${encodeURIComponent(value)}`;
-                await fetch(targetUrl, { method: 'GET', mode: 'cors' });
+                // 一樣加上時間戳記 t 確保每次存檔動作獨立
+                const targetUrl = `${API_URL}?action=${action}&type=${type}&date=${date}&value=${encodeURIComponent(value)}&t=${new Date().getTime()}`;
+                await fetch(targetUrl);
             } catch (error) {
                 console.error("同步至雲端失敗:", error);
-                alert("雲端同步失敗，請檢查網路連線。");
             }
         }
 
