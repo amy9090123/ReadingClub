@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>讀書會進度查詢系統 (終極同步版)</title>
+    <title>不屬靈讀書會進度查詢系統</title>
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -329,10 +329,10 @@
 
     <div class="app-container">
         <header>
-            <h1>📚 讀書會排班查詢系統</h1>
+            <h1>讀書會排班查詢系統</h1>
             <div class="book-title">📖 <span>為什麼我們沒離婚</span></div>
             <div class="admin-panel">
-                <h2>👥 核心成員輪值順序</h2>
+                <h2>核心成員輪值順序</h2>
                 <div class="member-list-display" id="memberDisplay"></div>
             </div>
         </header>
@@ -375,7 +375,7 @@
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
 
-        // 從雲端 Google Sheets 讀取最新資料 (終極防呆版)
+        // 從雲端 Google Sheets 讀取最新資料
         async function fetchCloudData() {
             if (!API_URL || API_URL.includes("請在此處貼上")) {
                 showLoading(false);
@@ -412,7 +412,7 @@
             }
         }
 
-        // 將變更寫入雲端 Google Sheets (終極防呆版)
+        // 將變更寫入雲端 Google Sheets
         async function saveToCloud(action, type, date, value = '') {
             if (!API_URL || API_URL.includes("請在此處貼上")) return;
             try {
@@ -470,7 +470,7 @@
                         </div>
                         <div class="card-body">
                             <div class="book-info">${BOOK_NAME}</div>
-                            <div class="chapter-title" style="color: var(--danger);">❌ 本週讀書會放假，進度順延</div>
+                            <div class="chapter-title" style="color: var(--danger);">😴 本週不讀書，進度順延</div>
                         </div>
                         <div class="card-footer">
                             <div class="footer-actions">
@@ -482,7 +482,7 @@
                                     </label>
                                 </div>
                                 <div class="switch-container">
-                                    <span style="color: var(--danger);">🏖️ 恢復進度</span>
+                                    <span style="color: var(--danger);">恢復進度</span>
                                     <label class="switch">
                                         <input type="checkbox" checked onchange="toggleHoliday('${dateStr}')">
                                         <span class="slider"></span>
@@ -533,7 +533,7 @@
                                     </label>
                                 </div>
                                 <div class="switch-container">
-                                    <span>🏖️ 放假</span>
+                                    <span>放假</span>
                                     <label class="switch">
                                         <input type="checkbox" onchange="toggleHoliday('${dateStr}')">
                                         <span class="slider"></span>
