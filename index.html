@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>讀書會進度查詢系統</title>
+    <title>讀書會進度查詢系統 (雲端同步版)</title>
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -43,6 +43,7 @@
             width: 100%;
             max-width: 500px;
             margin-bottom: 40px;
+            position: relative;
         }
 
         header {
@@ -71,7 +72,6 @@
             gap: 6px;
         }
 
-        /* 後台管理面板 */
         .admin-panel {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -85,33 +85,48 @@
             text-transform: uppercase;
             margin-bottom: 10px;
             letter-spacing: 1px;
+        }
+
+        .member-list-display {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .member-inputs {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .member-inputs input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            padding: 6px 8px;
-            color: white;
+            flex-wrap: wrap;
+            gap: 6px;
             font-size: 13px;
-            text-align: center;
-            outline: none;
-            transition: all 0.2s;
+            color: #e2e8f0;
         }
 
-        .member-inputs input:focus {
-            border-color: #38bdf8;
+        .member-tag {
             background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
         }
+
+        /* 載入中遮罩 */
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 16px;
+            transition: opacity 0.3s;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0,0,0,0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* 卡片列表 */
         .card-list {
@@ -127,7 +142,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             border: 1px solid var(--border);
             position: relative;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .card.holiday-active {
@@ -139,7 +153,6 @@
             border-left: 5px solid var(--warning);
         }
 
-        /* 卡片頂部資訊 */
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -151,9 +164,6 @@
             font-size: 16px;
             font-weight: 700;
             color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .card.holiday-active .card-date {
@@ -177,7 +187,6 @@
             color: white;
         }
 
-        /* 卡片內容 */
         .card-body {
             margin-bottom: 16px;
         }
@@ -195,7 +204,6 @@
             line-height: 1.4;
         }
 
-        /* 卡片底部操作區 */
         .card-footer {
             display: flex;
             flex-direction: column;
@@ -211,7 +219,6 @@
             width: 100%;
         }
 
-        /* 下拉選單樣式 */
         .select-wrapper {
             position: relative;
             width: 100%;
@@ -229,13 +236,6 @@
             appearance: none;
             outline: none;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .select-leader:focus {
-            border-color: var(--primary);
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         .select-wrapper::after {
@@ -249,7 +249,6 @@
             font-size: 12px;
         }
 
-        /* 開關切換鈕 */
         .switch-container {
             display: flex;
             align-items: center;
@@ -267,11 +266,7 @@
             height: 24px;
         }
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+        .switch input { opacity: 0; width: 0; height: 0; }
 
         .slider {
             position: absolute;
@@ -292,23 +287,12 @@
             background-color: white;
             transition: .3s;
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
-        input:checked + .slider {
-            background-color: var(--danger);
-        }
+        input:checked + .slider { background-color: var(--danger); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .switch-note input:checked + .slider { background-color: var(--primary); }
 
-        input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-
-        /* 開關不同顏色 - 備註用 */
-        .switch-note input:checked + .slider {
-            background-color: var(--primary);
-        }
-
-        /* 浮動提示標籤 */
         .status-tag {
             position: absolute;
             top: 18px;
@@ -317,7 +301,6 @@
             font-weight: 700;
             padding: 2px 6px;
             border-radius: 4px;
-            text-transform: uppercase;
         }
         
         .tag-sub {
@@ -326,7 +309,6 @@
             border: 1px solid #fde68a;
         }
 
-        /* 備註段落文字框 */
         .note-textarea {
             width: 100%;
             padding: 10px;
@@ -337,42 +319,35 @@
             resize: vertical;
             outline: none;
             background-color: #f8fafc;
-            transition: all 0.2s;
             font-family: inherit;
-        }
-
-        .note-textarea:focus {
-            border-color: var(--primary);
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
     </style>
 </head>
 <body>
 
+    <div id="loadingOverlay"><div class="spinner"></div>雲端資料同步中...</div>
+
     <div class="app-container">
-        <!-- 頂部區塊與後台文字管理 -->
         <header>
             <h1>📚 讀書會排班查詢系統</h1>
             <div class="book-title">📖 <span>為什麼我們沒離婚</span></div>
-            
             <div class="admin-panel">
-                <h2>⚙️ 後台管理：成員名單 (依序輪流)</h2>
-                <div class="member-inputs" id="memberInputsContainer">
-                    <!-- 由 JS 動態生成 6 個成員輸入框 -->
-                </div>
+                <h2>👥 核心成員輪值順序</h2>
+                <div class="member-list-display" id="memberDisplay"></div>
             </div>
         </header>
 
-        <!-- 卡片列表區 -->
-        <div class="card-list" id="cardListContainer">
-            <!-- 由 JS 動態依演算法生成 1-30 章節卡片 -->
-        </div>
+        <div class="card-list" id="cardListContainer"></div>
     </div>
 
     <script>
-        // 初始化基本設定與資料保存
-        const START_DATE_STR = '2026-07-13'; // 起始週一
+        // ==========================================
+        // 填入您的 Google Apps Script 部署網址
+        // ==========================================
+        const API_URL = "
+https://script.google.com/macros/s/AKfycbyhzqj4Vr7EIVySreYfdoNK60imcdUf-JYXsummyk9mnYngXg-ApiKnqY_jjvbDVTdL7w/exec"; 
+
+        const START_DATE_STR = '2026-07-13'; 
         const TOTAL_CHAPTERS = 30;
         const BOOK_NAME = "為什麼我們沒離婚";
         
@@ -389,25 +364,60 @@
             "28. 幫助—頭需要脖子的扶持", "29. 空巢—重拾兩個人的自由", "30. 現在—活在當下的美好"
         ];
 
-        // 從 localStorage 讀取或給予預設值 (加入新的成員與備註狀態)
         let state = {
-            members: JSON.parse(localStorage.getItem('rb_members')) || ['韻蓉', '阿虹', '慕潔', '佳馨', '小馬', '阿丁'],
-            holidays: JSON.parse(localStorage.getItem('rb_holidays')) || [], // 儲存放假日期字串格式 ['YYYY-MM-DD']
-            substitutes: JSON.parse(localStorage.getItem('rb_substitutes')) || {}, // 儲存代班紀錄 { 'YYYY-MM-DD': '代班人名字' }
-            notes: JSON.parse(localStorage.getItem('rb_notes')) || {}, // 儲存備註文字 { 'YYYY-MM-DD': '文字內容' }
-            noteToggles: JSON.parse(localStorage.getItem('rb_noteToggles')) || {} // 儲存備註欄展開狀態 { 'YYYY-MM-DD': boolean }
+            members: ['韻蓉', '阿虹', '慕潔', '佳馨', '小馬', '阿丁'],
+            holidays: [], 
+            substitutes: {}, 
+            notes: {}, 
+            noteToggles: {} // 展開狀態保留在本地即可
         };
 
-        // 儲存資料至本機
-        function saveState() {
-            localStorage.setItem('rb_members', JSON.stringify(state.members));
-            localStorage.setItem('rb_holidays', JSON.stringify(state.holidays));
-            localStorage.setItem('rb_substitutes', JSON.stringify(state.substitutes));
-            localStorage.setItem('rb_notes', JSON.stringify(state.notes));
-            localStorage.setItem('rb_noteToggles', JSON.stringify(state.noteToggles));
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
 
-        // 日期小工具：將 Date 物件格式化為 YYYY-MM-DD 
+        // 從雲端 Google Sheets 讀取最新資料
+        async function fetchCloudData() {
+            if (!API_URL || API_URL.includes("請在此處貼上")) {
+                showLoading(false);
+                renderSchedule();
+                return;
+            }
+            try {
+                showLoading(true);
+                const response = await fetch(API_URL);
+                const cloudData = await response.json();
+                
+                state.holidays = [];
+                state.substitutes = {};
+                state.notes = {};
+
+                cloudData.forEach(item => {
+                    if (item.type === 'holiday') state.holidays.push(item.date);
+                    if (item.type === 'substitute') state.substitutes[item.date] = item.value;
+                    if (item.type === 'note') state.notes[item.date] = item.value;
+                });
+            } catch (error) {
+                console.error("讀取雲端失敗:", error);
+                alert("無法連線至雲端資料庫，將顯示本地快照。");
+            } finally {
+                showLoading(false);
+                renderSchedule();
+            }
+        }
+
+        // 將變更寫入雲端 Google Sheets
+        async function saveToCloud(action, type, date, value = '') {
+            if (!API_URL || API_URL.includes("請在此處貼上")) return;
+            try {
+                const targetUrl = `${API_URL}?action=${action}&type=${type}&date=${date}&value=${encodeURIComponent(value)}`;
+                await fetch(targetUrl, { method: 'GET', mode: 'cors' });
+            } catch (error) {
+                console.error("同步至雲端失敗:", error);
+                alert("雲端同步失敗，請檢查網路連線。");
+            }
+        }
+
         function formatDate(date) {
             const yyyy = date.getFullYear();
             const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -415,50 +425,38 @@
             return `${yyyy}-${mm}-${dd}`;
         }
 
-        // 增加天數
         function addDays(date, days) {
             const result = new Date(date);
             result.setDate(result.getDate() + days);
             return result;
         }
 
-        // 建立後台管理輸入框
-        function initAdminPanel() {
-            const container = document.getElementById('memberInputsContainer');
+        function initMemberHeader() {
+            const container = document.getElementById('memberDisplay');
             container.innerHTML = '';
-            state.members.forEach((name, index) => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = name;
-                input.placeholder = `成員 ${index + 1}`;
-                input.addEventListener('input', (e) => {
-                    state.members[index] = e.target.value || `成員 ${index + 1}`;
-                    saveState();
-                    renderSchedule(); // 即時重新渲染卡片
-                });
-                container.appendChild(input);
+            state.members.forEach((name, i) => {
+                const tag = document.createElement('span');
+                tag.className = 'member-tag';
+                tag.innerText = `${i+1}. ${name}`;
+                container.appendChild(tag);
             });
         }
 
-        // 核心排班順延演算法與渲染
         function renderSchedule() {
             const container = document.getElementById('cardListContainer');
             container.innerHTML = '';
 
             let currentDate = new Date(START_DATE_STR);
             let currentChapter = 1;
-            let activeSessionCount = 0; // 用於計算常規輪值索引
+            let activeSessionCount = 0; 
 
-            // 直到 30 個章節全部排完為止
             while (currentChapter <= TOTAL_CHAPTERS) {
                 const dateStr = formatDate(currentDate);
                 const isHoliday = state.holidays.includes(dateStr);
-
                 const card = document.createElement('div');
                 card.className = 'card';
 
                 if (isHoliday) {
-                    // 放假模式：卡片顯示放假訊息，不消耗章節，導讀人順延
                     card.classList.add('holiday-active');
                     card.innerHTML = `
                         <div class="card-header">
@@ -487,30 +485,22 @@
                                 </div>
                             </div>
                             <div class="note-container" id="note-container-${dateStr}" style="display: ${state.noteToggles[dateStr] ? 'block' : 'none'}; width: 100%;">
-                                <textarea placeholder="請輸入放假原因或備註..." onchange="saveNote('${dateStr}', this.value)" rows="2" class="note-textarea">${state.notes[dateStr] || ''}</textarea>
+                                <textarea placeholder="請輸入放假原因或備註..." onchange="handleNoteChange('${dateStr}', this.value)" rows="2" class="note-textarea">${state.notes[dateStr] || ''}</textarea>
                             </div>
                         </div>
                     `;
                 } else {
-                    // 正常上課模式：計算表定導讀人
                     const defaultLeader = state.members[activeSessionCount % state.members.length];
-                    // 檢查是否有代班人紀錄
                     const currentLeader = state.substitutes[dateStr] || defaultLeader;
                     const isSubstitute = state.substitutes[dateStr] && state.substitutes[dateStr] !== defaultLeader;
 
-                    if (isSubstitute) {
-                        card.classList.add('substitute-active');
-                    }
+                    if (isSubstitute) card.classList.add('substitute-active');
 
-                    // 生成導讀人選單內容 (包含 6位成員 + "其他")
                     let optionsHtml = '';
-                    const allMembers = [...state.members, '其他'];
-                    allMembers.forEach(m => {
-                        const selected = m === currentLeader ? 'selected' : '';
-                        optionsHtml += `<option value="${m}" ${selected}>${m}</option>`;
+                    [...state.members, '其他'].forEach(m => {
+                        optionsHtml += `<option value="${m}" ${m === currentLeader ? 'selected' : ''}>${m}</option>`;
                     });
 
-                    // 取得當前章節標題
                     const chapterName = CHAPTER_TITLES[currentChapter - 1];
 
                     card.innerHTML = `
@@ -525,7 +515,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="select-wrapper">
-                                <select class="select-leader" onchange="changeLeader('${dateStr}', '${defaultLeader}', this.value)">
+                                <select class="select-leader" onchange="handleLeaderChange('${dateStr}', '${defaultLeader}', this.value)">
                                     ${optionsHtml}
                                 </select>
                             </div>
@@ -546,73 +536,62 @@
                                 </div>
                             </div>
                             <div class="note-container" id="note-container-${dateStr}" style="display: ${state.noteToggles[dateStr] ? 'block' : 'none'}; width: 100%;">
-                                <textarea placeholder="請輸入備註內容..." onchange="saveNote('${dateStr}', this.value)" rows="2" class="note-textarea">${state.notes[dateStr] || ''}</textarea>
+                                <textarea placeholder="請輸入備註內容..." onchange="handleNoteChange('${dateStr}', this.value)" rows="2" class="note-textarea">${state.notes[dateStr] || ''}</textarea>
                             </div>
                         </div>
                     `;
-
-                    // 只有正常上課時，章節與常規輪值計數才往後推
                     currentChapter++;
                     activeSessionCount++;
                 }
-
                 container.appendChild(card);
-                // 日期每週一固定遞增 7 天
                 currentDate = addDays(currentDate, 7);
             }
         }
 
-        // 切換放假狀態邏輯
-        function toggleHoliday(dateStr) {
+        async function toggleHoliday(dateStr) {
             const index = state.holidays.indexOf(dateStr);
             if (index > -1) {
-                state.holidays.splice(index, 1); // 移出放假清單
+                state.holidays.splice(index, 1);
+                renderSchedule(); // 先渲染提升操作流暢度
+                await saveToCloud('delete', 'holiday', dateStr);
             } else {
-                state.holidays.push(dateStr); // 加入放假清單
+                state.holidays.push(dateStr);
+                renderSchedule();
+                await saveToCloud('save', 'holiday', dateStr, 'true');
             }
-            saveState();
-            renderSchedule(); // 重新計算並渲染所有卡片
         }
 
-        // 變更導讀人 (處理代班) 邏輯
-        function changeLeader(dateStr, defaultLeader, selectedLeader) {
+        async function handleLeaderChange(dateStr, defaultLeader, selectedLeader) {
             if (selectedLeader === defaultLeader) {
-                delete state.substitutes[dateStr]; // 恢復成預設，刪除代班紀錄
+                delete state.substitutes[dateStr];
+                renderSchedule();
+                await saveToCloud('delete', 'substitute', dateStr);
             } else {
-                state.substitutes[dateStr] = selectedLeader; // 寫入代班人
+                state.substitutes[dateStr] = selectedLeader;
+                renderSchedule();
+                await saveToCloud('save', 'substitute', dateStr, selectedLeader);
             }
-            saveState();
-            renderSchedule();
         }
 
-        // 開啟/關閉備註文字框
         function toggleNoteView(dateStr, checkbox) {
             state.noteToggles[dateStr] = checkbox.checked;
-            saveState();
             const container = document.getElementById('note-container-' + dateStr);
-            if(container) {
-                container.style.display = checkbox.checked ? 'block' : 'none';
+            if(container) container.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        async function handleNoteChange(dateStr, value) {
+            state.notes[dateStr] = value;
+            if(!value.trim()) {
+                await saveToCloud('delete', 'note', dateStr);
+            } else {
+                await saveToCloud('save', 'note', dateStr, value);
             }
         }
 
-        // 儲存備註文字
-        function saveNote(dateStr, value) {
-            state.notes[dateStr] = value;
-            saveState();
-        }
-
-        // 頁面加載初始化
         window.onload = function() {
-            initAdminPanel();
-            renderSchedule();
+            initMemberHeader();
+            fetchCloudData();
         };
     </script>
 </body>
 </html>
-"""
-
-# Write the updated content to the HTML file
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print("HTML file successfully updated.")
