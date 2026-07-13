@@ -447,7 +447,7 @@
             });
         }
 
-        function renderSchedule() {
+function renderSchedule() {
             const container = document.getElementById('cardListContainer');
             container.innerHTML = '';
 
@@ -461,36 +461,41 @@
                 const card = document.createElement('div');
                 card.className = 'card';
 
+                // 【新增判斷】檢查是否有備註內容，如果有，強制展開備註欄
+                const noteText = state.notes[dateStr] || '';
+                const hasNote = noteText.trim() !== '';
+                const isNoteOpen = hasNote || state.noteToggles[dateStr];
+
                 if (isHoliday) {
                     card.classList.add('holiday-active');
                     card.innerHTML = `
                         <div class="card-header">
-                            <div class="card-date">ᴅᴀᴛᴇ ${dateStr} (一)</div>
+                            <div class="card-date">📅 ${dateStr} (一)</div>
                             <span class="badge badge-holiday">放假休息</span>
                         </div>
                         <div class="card-body">
                             <div class="book-info">${BOOK_NAME}</div>
-                            <div class="chapter-title" style="color: var(--danger);">😴 本週不讀書，進度順延</div>
+                            <div class="chapter-title" style="color: var(--danger);">❌ 本週讀書會放假，進度順延</div>
                         </div>
                         <div class="card-footer">
                             <div class="footer-actions">
                                 <div class="switch-container">
                                     <span>📝 備註</span>
                                     <label class="switch switch-note">
-                                        <input type="checkbox" onchange="toggleNoteView('${dateStr}', this)" ${state.noteToggles[dateStr] ? 'checked' : ''}>
+                                        <input type="checkbox" onchange="toggleNoteView('${dateStr}', this)" ${isNoteOpen ? 'checked' : ''}>
                                         <span class="slider"></span>
                                     </label>
                                 </div>
                                 <div class="switch-container">
-                                    <span style="color: var(--danger);">恢復進度</span>
+                                    <span style="color: var(--danger);">🏖️ 恢復進度</span>
                                     <label class="switch">
                                         <input type="checkbox" checked onchange="toggleHoliday('${dateStr}')">
                                         <span class="slider"></span>
                                     </label>
                                 </div>
                             </div>
-                            <div class="note-container" id="note-container-${dateStr}" style="display: ${state.noteToggles[dateStr] ? 'block' : 'none'}; width: 100%;">
-                                <textarea placeholder="請輸入放假原因或備註..." onchange="handleNoteChange('${dateStr}', this.value)" rows="2" class="note-textarea">${state.notes[dateStr] || ''}</textarea>
+                            <div class="note-container" id="note-container-${dateStr}" style="display: ${isNoteOpen ? 'block' : 'none'}; width: 100%;">
+                                <textarea placeholder="請輸入放假原因或備註..." onchange="handleNoteChange('${dateStr}', this.value)" rows="2" class="note-textarea">${noteText}</textarea>
                             </div>
                         </div>
                     `;
@@ -511,7 +516,7 @@
                     card.innerHTML = `
                         ${isSubstitute ? '<span class="status-tag tag-sub">代班中</span>' : ''}
                         <div class="card-header">
-                            <div class="card-date">ᴅᴀᴛᴇ ${dateStr} (一)</div>
+                            <div class="card-date">📅 ${dateStr} (一)</div>
                             <span class="badge badge-chapter">第 ${currentChapter} / ${TOTAL_CHAPTERS} 週</span>
                         </div>
                         <div class="card-body">
@@ -528,20 +533,20 @@
                                 <div class="switch-container">
                                     <span>📝 備註</span>
                                     <label class="switch switch-note">
-                                        <input type="checkbox" onchange="toggleNoteView('${dateStr}', this)" ${state.noteToggles[dateStr] ? 'checked' : ''}>
+                                        <input type="checkbox" onchange="toggleNoteView('${dateStr}', this)" ${isNoteOpen ? 'checked' : ''}>
                                         <span class="slider"></span>
                                     </label>
                                 </div>
                                 <div class="switch-container">
-                                    <span>放假</span>
+                                    <span>🏖️ 放假</span>
                                     <label class="switch">
                                         <input type="checkbox" onchange="toggleHoliday('${dateStr}')">
                                         <span class="slider"></span>
                                     </label>
                                 </div>
                             </div>
-                            <div class="note-container" id="note-container-${dateStr}" style="display: ${state.noteToggles[dateStr] ? 'block' : 'none'}; width: 100%;">
-                                <textarea placeholder="請輸入備註內容..." onchange="handleNoteChange('${dateStr}', this.value)" rows="2" class="note-textarea">${state.notes[dateStr] || ''}</textarea>
+                            <div class="note-container" id="note-container-${dateStr}" style="display: ${isNoteOpen ? 'block' : 'none'}; width: 100%;">
+                                <textarea placeholder="請輸入備註內容..." onchange="handleNoteChange('${dateStr}', this.value)" rows="2" class="note-textarea">${noteText}</textarea>
                             </div>
                         </div>
                     `;
