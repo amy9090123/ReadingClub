@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>讀書會進度查詢系統 (雲端同步版)</title>
+    <title>讀書會進度查詢系統 (終極同步版)</title>
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -329,10 +329,10 @@
 
     <div class="app-container">
         <header>
-            <h1>不屬靈讀書會｜導讀排班查詢系統</h1>
+            <h1>📚 讀書會排班查詢系統</h1>
             <div class="book-title">📖 <span>為什麼我們沒離婚</span></div>
             <div class="admin-panel">
-                <h2>核心成員輪值順序</h2>
+                <h2>👥 核心成員輪值順序</h2>
                 <div class="member-list-display" id="memberDisplay"></div>
             </div>
         </header>
@@ -344,7 +344,7 @@
         // ==========================================
         // 填入您的 Google Apps Script 部署網址
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbyhzqj4Vr7EIVySreYfdoNK60imcdUf-JYXsummyk9mnYngXg-ApiKnqY_jjvbDVTdL7w/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyhzqj4Vr7EIVySreYfdoNK60imcdUf-JYXsummyk9mnYngXg-ApiKnqY_jjvbDVTdL7w/exec"; 
 
         const START_DATE_STR = '2026-07-13'; 
         const TOTAL_CHAPTERS = 30;
@@ -368,14 +368,14 @@
             holidays: [], 
             substitutes: {}, 
             notes: {}, 
-            noteToggles: {} // 展開狀態保留在本地即可
+            noteToggles: {}
         };
 
         function showLoading(show) {
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
 
-// 從雲端 Google Sheets 讀取最新資料 (防暫存升級版)
+        // 從雲端 Google Sheets 讀取最新資料 (終極防呆版)
         async function fetchCloudData() {
             if (!API_URL || API_URL.includes("請在此處貼上")) {
                 showLoading(false);
@@ -384,7 +384,7 @@
             }
             try {
                 showLoading(true);
-                // 加上時間戳記 t，強制瀏覽器不要使用舊快取
+                // 加上時間戳記，絕對不拿舊資料
                 const targetUrl = `${API_URL}?t=${new Date().getTime()}`;
                 const response = await fetch(targetUrl);
                 const cloudData = await response.json();
@@ -394,9 +394,15 @@
                 state.notes = {};
 
                 cloudData.forEach(item => {
-                    if (item.type === 'holiday') state.holidays.push(item.date);
-                    if (item.type === 'substitute') state.substitutes[item.date] = item.value;
-                    if (item.type === 'note') state.notes[item.date] = item.value;
+                    let dateStr = String(item.date).trim();
+                    // 強制轉回純日期格式，消除所有隱藏的時間碼
+                    if (dateStr.includes('T')) {
+                        dateStr = dateStr.split('T')[0];
+                    }
+                    
+                    if (item.type === 'holiday') state.holidays.push(dateStr);
+                    if (item.type === 'substitute') state.substitutes[dateStr] = item.value;
+                    if (item.type === 'note') state.notes[dateStr] = item.value;
                 });
             } catch (error) {
                 console.error("讀取雲端失敗:", error);
@@ -406,11 +412,10 @@
             }
         }
 
-        // 將變更寫入雲端 Google Sheets (防暫存升級版)
+        // 將變更寫入雲端 Google Sheets (終極防呆版)
         async function saveToCloud(action, type, date, value = '') {
             if (!API_URL || API_URL.includes("請在此處貼上")) return;
             try {
-                // 一樣加上時間戳記 t 確保每次存檔動作獨立
                 const targetUrl = `${API_URL}?action=${action}&type=${type}&date=${date}&value=${encodeURIComponent(value)}&t=${new Date().getTime()}`;
                 await fetch(targetUrl);
             } catch (error) {
@@ -465,7 +470,7 @@
                         </div>
                         <div class="card-body">
                             <div class="book-info">${BOOK_NAME}</div>
-                            <div class="chapter-title" style="color: var(--danger);">❌ 本週不讀書，進度順延</div>
+                            <div class="chapter-title" style="color: var(--danger);">❌ 本週讀書會放假，進度順延</div>
                         </div>
                         <div class="card-footer">
                             <div class="footer-actions">
@@ -552,7 +557,7 @@
             const index = state.holidays.indexOf(dateStr);
             if (index > -1) {
                 state.holidays.splice(index, 1);
-                renderSchedule(); // 先渲染提升操作流暢度
+                renderSchedule(); 
                 await saveToCloud('delete', 'holiday', dateStr);
             } else {
                 state.holidays.push(dateStr);
