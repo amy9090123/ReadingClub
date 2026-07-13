@@ -475,7 +475,7 @@ function renderSchedule() {
                         </div>
                         <div class="card-body">
                             <div class="book-info">${BOOK_NAME}</div>
-                            <div class="chapter-title" style="color: var(--danger);">❌ 本週讀書會放假，進度順延</div>
+                            <div class="chapter-title" style="color: var(--danger);">😴 本週不讀書會，進度順延</div>
                         </div>
                         <div class="card-footer">
                             <div class="footer-actions">
@@ -487,7 +487,7 @@ function renderSchedule() {
                                     </label>
                                 </div>
                                 <div class="switch-container">
-                                    <span style="color: var(--danger);">🏖️ 恢復進度</span>
+                                    <span style="color: var(--danger);">💡 恢復進度</span>
                                     <label class="switch">
                                         <input type="checkbox" checked onchange="toggleHoliday('${dateStr}')">
                                         <span class="slider"></span>
@@ -538,7 +538,7 @@ function renderSchedule() {
                                     </label>
                                 </div>
                                 <div class="switch-container">
-                                    <span>🏖️ 放假</span>
+                                    <span>🏖️ 不讀書</span>
                                     <label class="switch">
                                         <input type="checkbox" onchange="toggleHoliday('${dateStr}')">
                                         <span class="slider"></span>
